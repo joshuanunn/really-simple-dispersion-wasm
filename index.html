@@ -1,0 +1,20 @@
+<html>
+  <head>
+    <meta content="text/html;charset=utf-8" http-equiv="Content-Type"/>
+  </head>
+  <body>
+    <script type="module">
+      import init, { RSDM } from './pkg/really_simple_dispersion_wasm.js';
+
+      async function run() {
+        await init();
+
+        // Setup RSDM
+        const rsdm = RSDM.new();
+        console.log(rsdm.source.height);
+      }
+
+      run();
+    </script>
+  </body>
+</html>

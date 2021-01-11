@@ -3,23 +3,22 @@
 
 mod rsdm;
 
-use crate::rsdm::rsdm::RSDM;
-use crate::rsdm::rsdm::Source;
-use crate::rsdm::disperse::*;
+use wasm_bindgen::prelude::*;
 
-fn main() {
-    let source = Source {
-        x: 0.0,
-        y: 0.0,
-        height: 50.0,
-        diameter: 0.5,
-        velocity: 10.0,
-        temp: 60.0,
-        emission: 1.0,
-    };
+// Called when the wasm module is instantiated
+#[wasm_bindgen(start)]
+pub fn main() -> Result<(), JsValue> {
+    // Use `web_sys`'s global `window` function to get a handle on the global
+    // window object.
+    let window = web_sys::window().expect("no global `window` exists");
+    let document = window.document().expect("should have a document on window");
+    let body = document.body().expect("document should have a body");
 
-    let mut rsdm = RSDM::new(source);
-    rsdm.set_resolution(10);
-    
-    println!("Hello, world! {}", rsdm.x_spacing);
+    // Manufacture the element we're gonna append
+    let val = document.create_element("p")?;
+    val.set_inner_html("Hello from Rust!");
+
+    body.append_child(&val)?;
+
+    Ok(())
 }
