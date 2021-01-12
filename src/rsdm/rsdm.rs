@@ -26,6 +26,13 @@ pub struct RSDM {
     x_spacing: u32,
     y_spacing: u32,
 
+    // meteorological settings
+    pub hours: u32,
+    pub wspd: f64,
+    pub wdir: f64,
+    //roughness: ,
+    pub pgcat: u8,
+
     // grid values (absolute and image representation)
     r_grid: Vec<u8>,
 	r_disp: Vec<u8>,
@@ -60,6 +67,11 @@ impl RSDM {
             y_max: 2500,
             x_spacing: 20,
             y_spacing: 20,
+
+            hours: 20,
+            wspd: 5.0,
+            wdir: 235.0, // degrees
+            pgcat: 2, // 'C'
 
             r_grid: Vec::new(),
             r_disp: Vec::new(),
