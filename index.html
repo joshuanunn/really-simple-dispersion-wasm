@@ -28,6 +28,8 @@
     <script type="module">
       import init, { RSDM } from './pkg/really_simple_dispersion_wasm.js';
       
+      const LEVELS = 10;
+
       function drawGrid(grid, target, rows, cols) {
         // Create temporary canvas to build png image
         const canvas = document.createElement('canvas');
@@ -52,7 +54,7 @@
             
             // Set shade of blue if concentration meets criteria
             if (grid[d] > 0) {
-              const conc = grid[d] / 10;
+              const conc = grid[d] / LEVELS;
               pixelR = 255 - 255*conc;
               pixelG = 255 - 255*conc;
               pixelB = 255;
@@ -80,13 +82,16 @@
 
         const height = rsdm.height();
         const width = rsdm.width();
+        const altitude = rsdm.altitude();
         
-        // Get pointer to grid in wasm linear memory
-        const grid = new Uint8Array(wasm.memory.buffer, rsdm.grid(), width * height);
-        //console.log(grid);
+        // Get pointer to grids in wasm linear memory
+        const r_grid = new Uint8Array(wasm.memory.buffer, rsdm.r_grid(), width * height);
+        const h_grid = new Uint8Array(wasm.memory.buffer, rsdm.h_grid(), width * altitude);
+        //console.log(r_grid);
         
-        // Draw image to canvas
-        drawGrid(grid, "rImg", height, width);
+        // Draw images to canvas
+        drawGrid(r_grid, "rImg", height, width);
+        drawGrid(h_grid, "hImg", altitude, width);
       }
 
       run();

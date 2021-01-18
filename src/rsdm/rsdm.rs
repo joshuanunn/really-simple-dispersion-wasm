@@ -46,10 +46,15 @@ pub struct RSDM {
     pub x_max: i32,
     pub y_min: i32,
     pub y_max: i32,
+    pub z_min: i32,
+    pub z_max: i32,
+
     pub x_spacing: usize,
     pub y_spacing: usize,
+    pub z_spacing: usize,
     pub x_points: usize,
     pub y_points: usize,
+    pub z_points: usize,
 
     // meteorological settings
     pub hours: u32,
@@ -62,8 +67,8 @@ pub struct RSDM {
     r_grid: Vec<f64>,
     r_disp: Vec<u8>,
 
-    //h_grid: Vec<f64>,
-    //h_disp: Vec<u8>,
+    h_grid: Vec<f64>,
+    h_disp: Vec<u8>,
 }
 
 /// Public methods, exported to JavaScript 
@@ -89,10 +94,15 @@ impl RSDM {
             x_max: 2500,
             y_min: -2500,
             y_max: 2500,
-            x_spacing: 20,
-            y_spacing: 20,
-            x_points: 250,
-            y_points: 250,
+            z_min: 0,
+            z_max: 1000,
+
+            x_spacing: 10,
+            y_spacing: 10,
+            z_spacing: 5,
+            x_points: 500,
+            y_points: 500,
+            z_points: 200,
 
             hours: 20,
             wspd: 5.0,
@@ -102,6 +112,9 @@ impl RSDM {
 
             r_grid: Vec::new(),
             r_disp: Vec::new(),
+
+            h_grid: Vec::new(),
+            h_disp: Vec::new(),
         };
 
         core.setup_grids();
@@ -118,21 +131,35 @@ impl RSDM {
     pub fn setup_grids(&mut self) {
         self.x_points = ((self.x_max - self.x_min) / self.x_spacing as i32) as usize;
         self.y_points = ((self.y_max - self.y_min) / self.y_spacing as i32) as usize;
-        let grid_len = self.x_points * self.y_points;
-        self.r_grid = vec![0.0; grid_len];
-        self.r_disp = vec![0; grid_len];
+        self.z_points = ((self.z_max - self.z_min) / self.z_spacing as i32) as usize;
+        
+        let r_grid_len = self.x_points * self.y_points;
+        self.r_grid = vec![0.0; r_grid_len];
+        self.r_disp = vec![0; r_grid_len];
+        
+        let h_grid_len = self.x_points * self.z_points;
+        self.h_grid = vec![0.0; h_grid_len];
+        self.h_disp = vec![0; h_grid_len];
     }
 
-    pub fn width(&self) -> usize {
-        self.x_points
+    pub fn width(&self) -> u32 {
+        self.x_points as u32
     }
     
-    pub fn height(&self) -> usize {
-        self.y_points
+    pub fn height(&self) -> u32 {
+        self.y_points as u32
     }
 
-    pub fn grid(&self) -> *const u8 {
+    pub fn altitude(&self) -> u32 {
+        self.z_points as u32
+    }
+
+    pub fn r_grid(&self) -> *const u8 {
        self.r_disp.as_ptr()
+    }
+
+    pub fn h_grid(&self) -> *const u8 {
+        self.h_disp.as_ptr()
     }
 
     pub fn cr_to_linear(&self, col: usize, row: usize) -> usize {
@@ -140,12 +167,17 @@ impl RSDM {
         self.x_points * (row_offset - row) + col
     }
 
-    pub fn grid_min(&self) -> f64 {
-        self.r_grid.iter().fold(f64::INFINITY, |a, &b| a.min(b))
+    pub fn ch_to_linear(&self, col: usize, row: usize) -> usize {
+        let row_offset = self.z_points - 1;
+        self.x_points * (row_offset - row) + col
     }
 
-    pub fn grid_max(&self) -> f64 {
+    pub fn r_grid_max(&self) -> f64 {
         self.r_grid.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+    }
+
+    pub fn h_grid_max(&self) -> f64 {
+        self.h_grid.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
     }
 
     pub fn iter_disp(&mut self, hours: u32) {
@@ -181,10 +213,23 @@ impl RSDM {
                         let sig_z = get_sigma_z(metline.pgcat, xx_corr);
                         
                         let i = self.cr_to_linear(x, y);
-
                         let conc = C(xx_corr, yy, 0.0, Uz, Q, H, sig_y, sig_z) / hours as f64;
-                        
                         self.r_grid[i] += conc;
+                    }
+                }
+            }
+
+            // Calculate concentrations for 2d slice showing height profile along plume
+            for (z,Zr) in (self.z_min..self.z_max).step_by(self.z_spacing).enumerate() {
+                for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
+                    if Uz > 0.5 {
+                        let xx_corr = (Xr as f64 - Xf) / 1000.0; // Plume rise correction
+                        let sig_y = get_sigma_y(metline.pgcat, xx_corr);
+                        let sig_z = get_sigma_z(metline.pgcat, xx_corr);
+                        
+                        let i = self.ch_to_linear(x, z);
+                        let conc = C(xx_corr, 0.0, Zr as f64, Uz, Q, H, sig_y, sig_z) / hours as f64;
+                        self.h_grid[i] += conc;
                     }
                 }
             }
@@ -193,7 +238,7 @@ impl RSDM {
     
     pub fn update_png(&mut self) {
         // Calculate min based on max - use log to band
-        let grid_max = self.grid_max();
+        let grid_max = self.r_grid_max();
         let min_norm = grid_max.log10().trunc() as isize - BANDS;
         
         // Normalise 2d grid into bands by taking log
@@ -202,11 +247,24 @@ impl RSDM {
                 
                 let i = self.cr_to_linear(x, y);
                 if self.r_grid[i] > grid_max / 1e10 {
-                    // 
                     let conc_norm = self.r_grid[i].log10().trunc() as isize - min_norm;
                     self.r_disp[i] = conc_norm as u8;
                 } else {
                     self.r_disp[i] = 0;
+                }
+            }
+        }
+
+        // Normalise height slice into bands by taking log
+        for (z,Zr) in (self.z_min..self.z_max).step_by(self.z_spacing).enumerate() {
+            for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
+                
+                let i = self.ch_to_linear(x, z);
+                if self.h_grid[i] > grid_max / 1e10 {
+                    let conc_norm = self.h_grid[i].log10().trunc() as isize - min_norm;
+                    self.h_disp[i] = conc_norm as u8;
+                } else {
+                    self.h_disp[i] = 0;
                 }
             }
         }
