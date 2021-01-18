@@ -29,17 +29,17 @@ extern "C" {
 pub struct Source {
     pub x: f64,         // Stack location (m)
     pub y: f64,
-	pub height: f64,    // Stack height (m)
-	pub diameter: f64,  // Stack diameter (m)
-	pub velocity: f64,  // Plume velocity at stack tip (m/s)
-	pub temp: f64,      // Plume temperature (C)
-	pub emission: f64,  // Stack emission rate (g/s)
+    pub height: f64,    // Stack height (m)
+    pub diameter: f64,  // Stack diameter (m)
+    pub velocity: f64,  // Plume velocity at stack tip (m/s)
+    pub temp: f64,      // Plume temperature (C)
+    pub emission: f64,  // Stack emission rate (g/s)
 }
 
 /// RSDM maintains the current state
 #[wasm_bindgen]
 pub struct RSDM {
-	pub source: Source,
+    pub source: Source,
 
     // min, max grid extents and spacing (m)
     pub x_min: i32,
@@ -60,10 +60,10 @@ pub struct RSDM {
 
     // grid values (absolute and image representation)
     r_grid: Vec<f64>,
-	r_disp: Vec<u8>,
+    r_disp: Vec<u8>,
 
-	//h_grid: Vec<f64>,
-	//h_disp: Vec<u8>,
+    //h_grid: Vec<f64>,
+    //h_disp: Vec<u8>,
 }
 
 /// Public methods, exported to JavaScript 
@@ -72,7 +72,7 @@ impl RSDM {
     // Create instance of RSDM with default parameters
     pub fn new() -> RSDM {
         // Default emission source
-	    let source = Source{
+        let source = Source{
             x: 0.0,
             y: 0.0,
             height: 50.0,
@@ -150,44 +150,44 @@ impl RSDM {
 
     pub fn iter_disp(&mut self, hours: u32) {
 
-		for _ in 0..hours {
-			// Generate an hour of met
-			let metline: MetHour;
-			if hours > 1 {
-				metline = self.gen_met(true);
-			} else {
-				metline = self.gen_met(false);
-			}
+        for _ in 0..hours {
+            // Generate an hour of met
+            let metline: MetHour;
+            if hours > 1 {
+                metline = self.gen_met(true);
+            } else {
+                metline = self.gen_met(false);
+            }
             
             // Calculate effective wind speed at stack tip (user specified wind speed is for 10 m)
             let Uz = calc_uz(metline.u, self.source.height, 10.0, metline.pgcat, self.roughness);
             
             // Calculate plume rise using Briggs equations
-			let Ts = self.source.temp + 273.15;
-			let (dH,Xf) = plume_rise(Uz, self.source.velocity, self.source.diameter, Ts, AMBIENT_TEMP, metline.pgcat);
-			let H = self.source.height + dH;
-			let Q = self.source.emission;
+            let Ts = self.source.temp + 273.15;
+            let (dH,Xf) = plume_rise(Uz, self.source.velocity, self.source.diameter, Ts, AMBIENT_TEMP, metline.pgcat);
+            let H = self.source.height + dH;
+            let Q = self.source.emission;
 
-			let sin_phi = metline.phi.sin();
-			let cos_phi = metline.phi.cos();
+            let sin_phi = metline.phi.sin();
+            let cos_phi = metline.phi.cos();
 
             // Calculate concentrations for plan view grid (fixed grid height of 0 m)
             for (y,Yr) in (self.y_min..self.y_max).step_by(self.y_spacing).enumerate() {
-			    for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
-					if Uz > 0.5 {
-						let (xx, yy) = wind_components(Xr as f64, Yr as f64, 0.0, 0.0, sin_phi, cos_phi);
-						let xx_corr = xx - (Xf / 1000.0); // Plume rise correction
+                for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
+                    if Uz > 0.5 {
+                        let (xx, yy) = wind_components(Xr as f64, Yr as f64, 0.0, 0.0, sin_phi, cos_phi);
+                        let xx_corr = xx - (Xf / 1000.0); // Plume rise correction
                         let sig_y = get_sigma_y(metline.pgcat, xx_corr);
-				        let sig_z = get_sigma_z(metline.pgcat, xx_corr);
+                        let sig_z = get_sigma_z(metline.pgcat, xx_corr);
                         
                         let i = self.cr_to_linear(x, y);
 
                         let conc = C(xx_corr, yy, 0.0, Uz, Q, H, sig_y, sig_z) / hours as f64;
                         
                         self.r_grid[i] += conc;
-					}
-				}
-			}
+                    }
+                }
+            }
         }
     }
     
@@ -216,21 +216,21 @@ impl RSDM {
 const TOLERANCE: f64 = 0.00000001;
 
 fn approx_equal(x :f64, y :f64) -> bool {
-	let diff = (x - y).abs();
-	diff < TOLERANCE
+    let diff = (x - y).abs();
+    diff < TOLERANCE
 }
 
 #[test]
 fn model_run_test() {
-	// Create new *RSDM and populate with fixed values (overwrite defaults)
+    // Create new *RSDM and populate with fixed values (overwrite defaults)
     let mut dm = RSDM::new();
     
     dm.wspd = 2.0;
-	dm.wdir = 130.0;
-	dm.source.height = 10.0;
-	dm.source.temp = 100.0;
-	dm.pgcat = b'A';
-	dm.hours = 1;
+    dm.wdir = 130.0;
+    dm.source.height = 10.0;
+    dm.source.temp = 100.0;
+    dm.pgcat = b'A';
+    dm.hours = 1;
 
     dm.x_min = -2500;
     dm.x_max = 2500;
@@ -243,9 +243,9 @@ fn model_run_test() {
     
     dm.setup_grids();
            
-	dm.iter_disp(1);
+    dm.iter_disp(1);
 
-	//hGridRef := 4.086979994894e-07
+    //hGridRef := 4.086979994894e-07
 
     //rGrid := dm.rGrid[23][14]
     
@@ -255,8 +255,8 @@ fn model_run_test() {
     println!("{}", *value);
     assert!(result, *value);
 
-	//hGrid := dm.hGrid[19][181]
-	//if !approxEqual(hGrid, hGridRef) {
-	//	t.Fatalf("got %v, wanted %v", hGrid, hGridRef)
-	//}
+    //hGrid := dm.hGrid[19][181]
+    //if !approxEqual(hGrid, hGridRef) {
+    //    t.Fatalf("got %v, wanted %v", hGrid, hGridRef)
+    //}
 }
