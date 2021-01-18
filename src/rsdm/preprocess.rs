@@ -16,7 +16,9 @@ impl RSDM {
     pub fn gen_met(&self, random: bool) -> MetHour {
         // Generate single hour based on RSDM current values
         if random == false {
-            MetHour{u: self.wspd, phi: self.wdir, pgcat: self.pgcat}
+            // Convert wind direction from degrees to radians
+            let phi = self.wdir * std::f64::consts::PI / 180.0;
+            MetHour{u: self.wspd, phi: phi, pgcat: self.pgcat}
         // Generate random set of hours
         } else {
             let mut rng = thread_rng();
@@ -25,7 +27,7 @@ impl RSDM {
             // Generate random wind direction 0 - 359 degrees and convert to radians
             let phi = (rng.gen_range(0, 360) as f64) * std::f64::consts::PI / 180.0;
             // Select random PG class
-            let pgcat: u8 = rng.gen_range(0, 6);
+            let pgcat: u8 = rng.gen_range(65, 71); // ASCII A to F
             
             MetHour{u, phi, pgcat}
         }

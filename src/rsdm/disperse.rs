@@ -1,6 +1,6 @@
-
 #[allow(non_upper_case_globals)]
 const g :f64 = 9.80616; // Gravitational constant
+pub const AMBIENT_TEMP: f64 = 293.15; // Fixed ambient temperature [K] (20 C)
 const URBAN: u8 = 0;
 const RURAL: u8 = 1;
 
@@ -9,7 +9,7 @@ fn sigma_y(c: f64, d: f64, x: f64) -> f64 {
 	465.11628 * x * theta.tan()
 }
 
-fn get_sigma_y(pgcat: u8, x: f64) -> f64 {
+pub fn get_sigma_y(pgcat: u8, x: f64) -> f64 {
 	match pgcat {
 		b'A' => sigma_y(24.1670, 2.5334, x),
 		b'B' => sigma_y(18.3330, 1.8096, x),
@@ -25,7 +25,7 @@ fn sigma_z(a: f64, b: f64, x: f64) -> f64 {
 	a * x.powf(b)
 }
 
-fn get_sigma_z(pgcat: u8, x: f64) -> f64 {
+pub fn get_sigma_z(pgcat: u8, x: f64) -> f64 {
 	match pgcat {
 		b'A' => sigma_za(x),
 		b'B' => sigma_zb(x),
@@ -163,7 +163,7 @@ uzref	[m/s]	wind speed of actual measurment
 zref	[m]		elevation of actual measurement
 p		[]		wind profile exponent factor (based on stability cat)
 */
-fn calc_uz(uz_ref: f64, z: f64, z_ref: f64, pgcat: u8, roughness: u8) -> f64 {
+pub fn calc_uz(uz_ref: f64, z: f64, z_ref: f64, pgcat: u8, roughness: u8) -> f64 {
 	let p: f64 = if roughness == URBAN {
 		match pgcat {
 			b'A' => 0.15,
@@ -203,7 +203,7 @@ returns:
 x		[km]	downwind plume receptor distance
 y		[m]		crosswind plume receptor distance
 */
-fn wind_components(e_r: f64, n_r: f64, e_s: f64, n_s: f64, sin_phi: f64, cos_phi: f64) -> (f64, f64) {
+pub fn wind_components(e_r: f64, n_r: f64, e_s: f64, n_s: f64, sin_phi: f64, cos_phi: f64) -> (f64, f64) {
 	let x = (-1.0*(e_r-e_s)*sin_phi - (n_r-n_s)*cos_phi) / 1000.0;
 	let y = (e_r-e_s)*cos_phi - (n_r-n_s)*sin_phi;
 	return (x, y)
@@ -224,7 +224,7 @@ dH		[m]		plume rise
 Xf		[m]		plume rise offset
 */
 #[allow(non_snake_case)]
-fn plume_rise(us: f64, vs: f64, ds: f64, Ts: f64, Ta: f64, pgcat: u8) -> (f64, f64) {
+pub fn plume_rise(us: f64, vs: f64, ds: f64, Ts: f64, Ta: f64, pgcat: u8) -> (f64, f64) {
 	// Compute buoyancy flux
 	let Fb = g * vs * ds * ds * (Ts - Ta) / (4.0 * Ts);
 	// Calculate momentum flux
@@ -293,7 +293,7 @@ u_z		[m/s]	wind speed at stack exit
 conc	[g/m3]	calculated receptor concentration
 */
 #[allow(non_snake_case)]
-fn C(x: f64, y: f64, z: f64, u_z: f64, Q: f64, H: f64, s_y: f64, s_z: f64) -> f64 {
+pub fn C(x: f64, y: f64, z: f64, u_z: f64, Q: f64, H: f64, s_y: f64, s_z: f64) -> f64 {
 	// Early return if coordinate upwind, as concentration always zero
 	if x <= 0.0 {
 		return 0.0
@@ -310,9 +310,6 @@ fn C(x: f64, y: f64, z: f64, u_z: f64, Q: f64, H: f64, s_y: f64, s_z: f64) -> f6
 	}
 	conc
 }
-
-
-
 
 const TOLERANCE: f64 = 0.00000001;
 
