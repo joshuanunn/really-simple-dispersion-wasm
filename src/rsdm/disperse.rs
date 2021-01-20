@@ -1,6 +1,5 @@
 #[allow(non_upper_case_globals)]
 const g :f64 = 9.80616; // Gravitational constant
-pub const AMBIENT_TEMP: f64 = 293.15; // Fixed ambient temperature [K] (20 C)
 const URBAN: u8 = 0;
 const RURAL: u8 = 1;
 
@@ -17,7 +16,7 @@ pub fn get_sigma_y(pgcat: u8, x: f64) -> f64 {
         b'D' => sigma_y(8.3330, 0.72382, x),
         b'E' => sigma_y(6.2500, 0.54287, x),
         b'F' => sigma_y(4.1667, 0.36191, x),
-        _ => sigma_y(0.0, 0.0, 0.0),/////////////////////////////
+        _ => panic!(),
     }
 }
 
@@ -33,46 +32,34 @@ pub fn get_sigma_z(pgcat: u8, x: f64) -> f64 {
         b'D' => sigma_zd(x),
         b'E' => sigma_ze(x),
         b'F' => sigma_zf(x),
-        _ => sigma_za(0.0),//////////////////////////////////////
+        _ => panic!(),
     }
 }
 
 fn sigma_za(x: f64) -> f64 {
-    let s_z;
-    if x <= 0.10 {
-        s_z = sigma_z(122.800, 0.94470, x);
-    } else if x <= 0.15 {
-        s_z = sigma_z(158.080, 1.05420, x);
-    } else if x <= 0.20 {
-        s_z = sigma_z(170.220, 1.09320, x);
-    } else if x <= 0.25 {
-        s_z = sigma_z(179.520, 1.12620, x);
-    } else if x <= 0.30 {
-        s_z = sigma_z(217.410, 1.26440, x);
-    } else if x <= 0.40 {
-        s_z = sigma_z(258.890, 1.40940, x);
-    } else if x <= 0.50 {
-        s_z = sigma_z(346.750, 1.72830, x);
-    } else if x <= 3.11 {
-        s_z = sigma_z(453.850, 2.11660, x);
-    } else {
-        s_z = 5000.0;
-    }
+    let s_z = match x {
+        sz if sz <= 0.10 => sigma_z(122.800, 0.94470, x),
+        sz if sz <= 0.15 => sigma_z(158.080, 1.05420, x),
+        sz if sz <= 0.20 => sigma_z(170.220, 1.09320, x),
+        sz if sz <= 0.25 => sigma_z(179.520, 1.12620, x),
+        sz if sz <= 0.30 => sigma_z(217.410, 1.26440, x),
+        sz if sz <= 0.40 => sigma_z(258.890, 1.40940, x),
+        sz if sz <= 0.50 => sigma_z(346.750, 1.72830, x),
+        sz if sz <= 3.11 => sigma_z(453.850, 2.11660, x),
+        _ => 5000.0,
+    };
     if s_z > 5000.0 {
-        return 5000.0
+        return 5000.0;
     }
     s_z
 }
 
 fn sigma_zb(x: f64) -> f64 {
-    let s_z;
-    if x <= 0.20 {
-        s_z = sigma_z(90.673, 0.93198, x);
-    } else if x <= 0.40 {
-        s_z = sigma_z(98.483, 0.98332, x);
-    } else {
-        s_z = sigma_z(109.300, 1.09710, x);
-    }
+    let s_z = match x {
+        sz if sz <= 0.20 => sigma_z(90.673, 0.93198, x),
+        sz if sz <= 0.40 => sigma_z(98.483, 0.98332, x),
+        _ => sigma_z(109.300, 1.09710, x),
+    };
     if s_z > 5000.0 {
         return 5000.0
     }
@@ -82,108 +69,83 @@ fn sigma_zb(x: f64) -> f64 {
 fn sigma_zc(x: f64) -> f64 {
     let s_z = sigma_z(61.141, 0.91465, x);
     if s_z > 5000.0 {
-        return 5000.0
+        return 5000.0;
     }
     s_z
 }
 
 fn sigma_zd(x: f64) -> f64 {
-    let s_z;
-    if x <= 0.30 {
-        s_z = sigma_z(34.459, 0.86974, x);
-    } else if x <= 1.0 {
-        s_z = sigma_z(32.093, 0.81066, x);
-    } else if x <= 3.0 {
-        s_z = sigma_z(32.093, 0.64403, x);
-    } else if x <= 10.0 {
-        s_z = sigma_z(33.504, 0.60486, x);
-    } else if x <= 30.0 {
-        s_z = sigma_z(36.650, 0.56589, x);
-    } else {
-        s_z = sigma_z(44.053, 0.51179, x);
-    }
+    let s_z = match x {
+        sz if sz <= 0.30 => sigma_z(34.459, 0.86974, x),
+        sz if sz <= 1.0 => sigma_z(32.093, 0.81066, x),
+        sz if sz <= 3.0 => sigma_z(32.093, 0.64403, x),
+        sz if sz <= 10.0 => sigma_z(33.504, 0.60486, x),
+        sz if sz <= 30.0 => sigma_z(36.650, 0.56589, x),
+        _ => sigma_z(44.053, 0.51179, x),
+    };
     s_z
 }
 
 fn sigma_ze(x: f64) -> f64 {
-    let s_z;
-    if x <= 0.10 {
-        s_z = sigma_z(24.260, 0.83660, x);
-    } else if x <= 0.3 {
-        s_z = sigma_z(23.331, 0.81956, x);
-    } else if x <= 1.0 {
-        s_z = sigma_z(21.628, 0.75660, x);
-    } else if x <= 2.0 {
-        s_z = sigma_z(21.628, 0.63077, x);
-    } else if x <= 4.0 {
-        s_z = sigma_z(22.534, 0.57154, x);
-    } else if x <= 10.0 {
-        s_z = sigma_z(24.703, 0.50527, x);
-    } else if x <= 20.0 {
-        s_z = sigma_z(26.970, 0.46713, x);
-    } else if x <= 40.0 {
-        s_z = sigma_z(35.420, 0.37615, x);
-    } else {
-        s_z = sigma_z(47.618, 0.29592, x);
-    }
+    let s_z = match x {
+        sz if sz <= 0.10 => sigma_z(24.260, 0.83660, x),
+        sz if sz <= 0.3 => sigma_z(23.331, 0.81956, x),
+        sz if sz <= 1.0 => sigma_z(21.628, 0.75660, x),
+        sz if sz <= 2.0 => sigma_z(21.628, 0.63077, x),
+        sz if sz <= 4.0 => sigma_z(22.534, 0.57154, x),
+        sz if sz <= 10.0 => sigma_z(24.703, 0.50527, x),
+        sz if sz <= 20.0 => sigma_z(26.970, 0.46713, x),
+        sz if sz <= 40.0 => sigma_z(35.420, 0.37615, x),
+        _ => sigma_z(47.618, 0.29592, x),
+    };
     s_z
 }
 
 fn sigma_zf(x: f64) -> f64 {
-    let s_z;
-    if x <= 0.20 {
-        s_z = sigma_z(15.209, 0.81558, x);
-    } else if x <= 0.7 {
-        s_z = sigma_z(14.457, 0.78407, x);
-    } else if x <= 1.0 {
-        s_z = sigma_z(13.953, 0.68465, x);
-    } else if x <= 2.0 {
-        s_z = sigma_z(13.953, 0.63227, x);
-    } else if x <= 3.0 {
-        s_z = sigma_z(14.823, 0.54503, x);
-    } else if x <= 7.0 {
-        s_z = sigma_z(16.187, 0.46490, x);
-    } else if x <= 15.0 {
-        s_z = sigma_z(17.836, 0.41507, x);
-    } else if x <= 30.0 {
-        s_z = sigma_z(22.651, 0.32681, x);
-    } else if x <= 60.0 {
-        s_z = sigma_z(27.074, 0.27436, x);
-    } else {
-        s_z = sigma_z(34.219, 0.21716, x);
-    }
+    let s_z = match x {
+        sz if sz <= 0.20 => sigma_z(15.209, 0.81558, x),
+        sz if sz <= 0.7 => sigma_z(14.457, 0.78407, x),
+        sz if sz <= 1.0 => sigma_z(13.953, 0.68465, x),
+        sz if sz <= 2.0 => sigma_z(13.953, 0.63227, x),
+        sz if sz <= 3.0 => sigma_z(14.823, 0.54503, x),
+        sz if sz <= 7.0 => sigma_z(16.187, 0.46490, x),
+        sz if sz <= 15.0 => sigma_z(17.836, 0.41507, x),
+        sz if sz <= 30.0 => sigma_z(22.651, 0.32681, x),
+        sz if sz <= 60.0 => sigma_z(27.074, 0.27436, x),
+        _ => sigma_z(34.219, 0.21716, x),
+    };
     s_z
 }
 
 /*
 Calculate effective wind speed, using "power law" method
-Uz        [m/s]     estimated wind speed at target elevation z
-z        [m]        target elevation
-uzref    [m/s]    wind speed of actual measurment
-zref    [m]        elevation of actual measurement
-p        []        wind profile exponent factor (based on stability cat)
+Uz          [m/s]   estimated wind speed at target elevation z
+z           [m]     target elevation
+uzref       [m/s]   wind speed of actual measurment
+zref        [m]     elevation of actual measurement
+p           []      wind profile exponent factor (based on stability cat)
 */
 pub fn calc_uz(uz_ref: f64, z: f64, z_ref: f64, pgcat: u8, roughness: u8) -> f64 {
-    let p: f64 = if roughness == URBAN {
-        match pgcat {
+    let p: f64 = match roughness {
+        URBAN => match pgcat {
             b'A' => 0.15,
             b'B' => 0.15,
             b'C' => 0.20,
             b'D' => 0.25,
             b'E' => 0.30,
             b'F' => 0.30,
-            _ => 0.0, ///////////////////////
-        }
-    } else {
-        match pgcat {
+            _ => panic!(),
+        },
+        RURAL => match pgcat {
             b'A' => 0.07,
             b'B' => 0.07,
             b'C' => 0.10,
             b'D' => 0.15,
             b'E' => 0.35,
             b'F' => 0.55,
-            _ => 0.0, ///////////////////////
-        }
+            _ => panic!(),
+        },
+        _ => panic!(),
     };
     uz_ref * (z/z_ref).powf(p)
 }
@@ -192,16 +154,16 @@ pub fn calc_uz(uz_ref: f64, z: f64, z_ref: f64, pgcat: u8, roughness: u8) -> f64
 Calculate the downwind (x) and crosswind (y) plume components from rectangular coordinates.
 
 inputs:
-e_r        [m]        receptor easting
-n_r        [m]        receptor northing
-e_s        [m]        source (stack) easting
-n_s        [m]        source (stack) northing
-sin_phi    []        sine of wind direction in radians
-cos_phi    []        cosine of wind direction in radians
+e_r         [m]     receptor easting
+n_r         [m]     receptor northing
+e_s         [m]     source (stack) easting
+n_s         [m]     source (stack) northing
+sin_phi     []      sine of wind direction in radians
+cos_phi     []      cosine of wind direction in radians
 
 returns:
-x        [km]    downwind plume receptor distance
-y        [m]        crosswind plume receptor distance
+x           [km]    downwind plume receptor distance
+y           [m]     crosswind plume receptor distance
 */
 pub fn wind_components(e_r: f64, n_r: f64, e_s: f64, n_s: f64, sin_phi: f64, cos_phi: f64) -> (f64, f64) {
     let x = (-1.0*(e_r-e_s)*sin_phi - (n_r-n_s)*cos_phi) / 1000.0;
@@ -213,15 +175,15 @@ pub fn wind_components(e_r: f64, n_r: f64, e_s: f64, n_s: f64, sin_phi: f64, cos
 Calculate plume rise, using Briggs model.
 
 Calculates the plume rise (dH) to add to stack height and a downwind plume offset (Xf).
-us        [m/s]    wind velocity at stack tip
-vs        [m/s]    stack exit velocity
-ds        [m]        stack tip diameter
-Ts        [K]        stack tip temperature
-Ta        [K]        ambient temperature
-pgcat    []        Pasquill-Gifford stability category
+us          [m/s]   wind velocity at stack tip
+vs          [m/s]   stack exit velocity
+ds          [m]     stack tip diameter
+Ts          [K]     stack tip temperature
+Ta          [K]     ambient temperature
+pgcat       []      Pasquill-Gifford stability category
 
-dH        [m]        plume rise
-Xf        [m]        plume rise offset
+dH          [m]     plume rise
+Xf          [m]     plume rise offset
 */
 #[allow(non_snake_case)]
 pub fn plume_rise(us: f64, vs: f64, ds: f64, Ts: f64, Ta: f64, pgcat: u8) -> (f64, f64) {
@@ -286,17 +248,17 @@ pub fn plume_rise(us: f64, vs: f64, ds: f64, Ts: f64, Ta: f64, pgcat: u8) -> (f6
 
 /*
 Calculate concentration at distance x along plume, at perpendicular offset y and height z
-x        [km]    receptor distance downwind along plume centreline
-y        [m]        receptor perpendicular offset from plume centreline
-z        [m]        receptor height
-u_z        [m/s]    wind speed at stack exit
-conc    [g/m3]    calculated receptor concentration
+x           [km]    receptor distance downwind along plume centreline
+y           [m]     receptor perpendicular offset from plume centreline
+z           [m]     receptor height
+u_z         [m/s]   wind speed at stack exit
+conc        [g/m3]  calculated receptor concentration
 */
 #[allow(non_snake_case)]
 pub fn C(x: f64, y: f64, z: f64, u_z: f64, Q: f64, H: f64, s_y: f64, s_z: f64) -> f64 {
     // Early return if coordinate upwind, as concentration always zero
     if x <= 0.0 {
-        return 0.0
+        return 0.0;
     }
 
     let c1 = Q / (2.0 * std::f64::consts::PI * u_z * s_y * s_z);
@@ -306,7 +268,7 @@ pub fn C(x: f64, y: f64, z: f64, u_z: f64, Q: f64, H: f64, s_y: f64, s_z: f64) -
 
     let conc = c1 * (c2 + c3) * c4; // g/m3
     if conc.is_nan() {
-        return 0.0
+        return 0.0;
     }
     conc
 }

@@ -1,27 +1,10 @@
 use wasm_bindgen::prelude::*;
 use std::f64;
 use crate::rsdm::preprocess::MetHour;
-use crate::rsdm::disperse::{calc_uz, plume_rise, AMBIENT_TEMP, get_sigma_y, get_sigma_z, wind_components, C};
+use crate::rsdm::disperse::{calc_uz, plume_rise, get_sigma_y, get_sigma_z, wind_components, C};
 
+const AMBIENT_TEMP: f64 = 293.15; // Fixed ambient temperature [K] (20 C)
 const BANDS: isize = 10;
-
-#[wasm_bindgen]
-extern "C" {
-    // Use `js_namespace` here to bind `console.log(..)` instead of just
-    // `log(..)`
-    //#[wasm_bindgen(js_namespace = console)]
-    //fn log(s: &str);
-
-    // The `console.log` is quite polymorphic, so we can bind it with multiple
-    // signatures. Note that we need to use `js_name` to ensure we always call
-    // `log` in JS.
-    //#[wasm_bindgen(js_namespace = console, js_name = log)]
-    //fn log_u32(a: u32);
-
-    // Multiple arguments too!
-    #[wasm_bindgen(js_namespace = console, js_name = log)]
-    fn log_many(a: f64, b: f64, c: f64, d: f64, e: f64, f: f64, g: f64, h: f64);
-}
 
 /// Source defines the stack (emission source) parameters
 #[wasm_bindgen]
@@ -243,6 +226,7 @@ impl RSDM {
         }
     }
 
+    #[allow(non_snake_case)]
     pub fn iter_disp(&mut self, hours: u32) {
 
         for _ in 0..hours {
@@ -305,8 +289,8 @@ impl RSDM {
         let min_norm = grid_max.log10().trunc() as isize - BANDS;
         
         // Normalise 2d grid into bands by taking log
-        for (y,Yr) in (self.y_min..self.y_max).step_by(self.y_spacing).enumerate() {
-            for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
+        for y in 0..self.y_points {
+            for x in 0..self.x_points {
                 
                 let i = self.cr_to_linear(x, y);
                 if self.r_grid[i] > grid_max / 1e10 {
@@ -319,8 +303,8 @@ impl RSDM {
         }
 
         // Normalise height slice into bands by taking log
-        for (z,Zr) in (self.z_min..self.z_max).step_by(self.z_spacing).enumerate() {
-            for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
+        for z in 0..self.z_points {
+            for x in 0..self.x_points {
                 
                 let i = self.ch_to_linear(x, z);
                 if self.h_grid[i] > grid_max / 1e10 {
