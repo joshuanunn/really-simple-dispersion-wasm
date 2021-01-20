@@ -122,9 +122,19 @@ impl RSDM {
     }
 
     /// Change grid resolution
-    pub fn set_resolution(&mut self, spacing: usize) {
-        self.x_spacing = spacing;
-        self.y_spacing = spacing;
+    pub fn set_resolution(&mut self, value: &str) {
+        let v_spacing: usize;
+        let h_spacing: usize;
+        match value {
+            "Low" => {h_spacing = 50; v_spacing = 25},
+            "Medium" => {h_spacing = 20; v_spacing = 10},
+            "High" => {h_spacing = 10; v_spacing = 5},
+            _ => panic!(),
+        }
+        self.x_spacing = h_spacing;
+        self.y_spacing = h_spacing;
+        self.z_spacing = v_spacing;
+        self.setup_grids();
     }
 
     /// Setup grids
@@ -140,6 +150,50 @@ impl RSDM {
         let h_grid_len = self.x_points * self.z_points;
         self.h_grid = vec![0.0; h_grid_len];
         self.h_disp = vec![0; h_grid_len];
+    }
+
+    pub fn set_elevation(&mut self, value: f64) {
+        self.source.height = value;
+    }
+
+    pub fn set_diameter(&mut self, value: f64) {
+        self.source.diameter = value;
+    }
+
+    pub fn set_velocity(&mut self, value: f64) {
+        self.source.velocity = value;
+    }
+
+    pub fn set_temp(&mut self, value: f64) {
+        self.source.temp = value;
+    }
+
+    pub fn set_wdir(&mut self, value: f64) {
+        self.wdir = value;
+    }
+
+    pub fn set_wspd(&mut self, value: f64) {
+        self.wspd = value;
+    }
+
+    pub fn set_roughness(&mut self, value: &str) {
+        match value {
+            "urban" => self.roughness = 0,
+            "rural" => self.roughness = 1,
+            _ => panic!(),
+        }
+    }
+
+    pub fn set_pgcat(&mut self, value: &str) {
+        match value {
+            "A" => self.pgcat = b'A',
+            "B" => self.pgcat = b'B',
+            "C" => self.pgcat = b'C',
+            "D" => self.pgcat = b'D',
+            "E" => self.pgcat = b'E',
+            "F" => self.pgcat = b'F',
+            _ => panic!(),
+        }
     }
 
     pub fn width(&self) -> u32 {
@@ -162,12 +216,12 @@ impl RSDM {
         self.h_disp.as_ptr()
     }
 
-    pub fn cr_to_linear(&self, col: usize, row: usize) -> usize {
+    fn cr_to_linear(&self, col: usize, row: usize) -> usize {
         let row_offset = self.y_points - 1;
         self.x_points * (row_offset - row) + col
     }
 
-    pub fn ch_to_linear(&self, col: usize, row: usize) -> usize {
+    fn ch_to_linear(&self, col: usize, row: usize) -> usize {
         let row_offset = self.z_points - 1;
         self.x_points * (row_offset - row) + col
     }
@@ -178,6 +232,15 @@ impl RSDM {
 
     pub fn h_grid_max(&self) -> f64 {
         self.h_grid.iter().fold(f64::NEG_INFINITY, |a, &b| a.max(b))
+    }
+    
+    pub fn clear_grids(&mut self) {
+        for i in 0..self.r_grid.len() {
+            self.r_grid[i] = 0.0;
+        }
+        for i in 0..self.h_grid.len() {
+            self.h_grid[i] = 0.0;
+        }
     }
 
     pub fn iter_disp(&mut self, hours: u32) {
