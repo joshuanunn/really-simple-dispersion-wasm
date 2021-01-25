@@ -4,6 +4,14 @@ version = "0.1.0"
 authors = ["Joshua Nunn <joshuanunn@hotmail.co.uk>"]
 edition = "2018"
 
+[profile.release]
+lto = true
+opt-level = 3
+
+[profile.dev]
+lto = true
+opt-level = 3
+
 [lib]
 crate-type = ["cdylib"]
 
