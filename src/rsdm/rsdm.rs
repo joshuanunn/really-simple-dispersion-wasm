@@ -5,6 +5,7 @@ use crate::rsdm::disperse::{calc_uz, plume_rise, get_sigma_y, get_sigma_z, wind_
 
 const AMBIENT_TEMP: f64 = 293.15; // Fixed ambient temperature [K] (20 C)
 const BANDS: isize = 10;
+pub const TOLERANCE: f64 = 0.00000001;
 
 /// Source defines the stack (emission source) parameters
 #[wasm_bindgen]
@@ -318,9 +319,7 @@ impl RSDM {
     }
 }
 
-const TOLERANCE: f64 = 0.00000001;
-
-fn approx_equal(x :f64, y :f64) -> bool {
+pub fn approx_equal(x :f64, y :f64) -> bool {
     let diff = (x - y).abs();
     diff < TOLERANCE
 }
@@ -340,28 +339,22 @@ fn model_run_test() {
     dm.x_min = -2500;
     dm.x_max = 2500;
     dm.y_min = -2500;
-    dm.y_max =  2500;
+    dm.y_max = 2500;
+    dm.z_min = 0;
+    dm.z_max = 1000;
     dm.x_spacing = 20;
     dm.y_spacing = 20;
-    
-    //dm.hCoords = &Grid{xmin: -2500, xmax: 2500, xgap: dm.grid, ymin: 0, ymax: 1000, ygap: dm.grid / 2}
+    dm.z_spacing = 10;
     
     dm.setup_grids();
            
     dm.iter_disp(1);
 
-    //hGridRef := 4.086979994894e-07
-
-    //rGrid := dm.rGrid[23][14]
-    
     let grid_ref = 23 * dm.x_points + 14;
-    let value = &dm.r_grid[grid_ref];
-    let result = approx_equal(*value, 6.366502967443e-08);
-    println!("{}", *value);
-    assert!(result, *value);
+    let value = dm.r_grid[grid_ref];
+    assert!(approx_equal(value, 6.366502967443e-08), value);
 
-    //hGrid := dm.hGrid[19][181]
-    //if !approxEqual(hGrid, hGridRef) {
-    //    t.Fatalf("got %v, wanted %v", hGrid, hGridRef)
-    //}
+    let grid_ref = 18 * dm.x_points + 181;
+    let value = dm.h_grid[grid_ref];
+    assert!(approx_equal(value, 4.086979994894e-07), value);
 }

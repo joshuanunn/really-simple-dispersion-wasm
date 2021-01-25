@@ -1,3 +1,5 @@
+use crate::rsdm::rsdm::{TOLERANCE, approx_equal};
+
 #[allow(non_upper_case_globals)]
 const g :f64 = 9.80616; // Gravitational constant
 const URBAN: u8 = 0;
@@ -271,13 +273,6 @@ pub fn C(x: f64, y: f64, z: f64, u_z: f64, Q: f64, H: f64, s_y: f64, s_z: f64) -
         return 0.0;
     }
     conc
-}
-
-const TOLERANCE: f64 = 0.00000001;
-
-fn approx_equal(x :f64, y :f64) -> bool {
-    let diff = (x - y).abs();
-    diff < TOLERANCE
 }
 
 #[test]
