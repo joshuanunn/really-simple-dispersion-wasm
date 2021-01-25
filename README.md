@@ -3,7 +3,7 @@
 ## Introduction
 An interactive atmospheric dispersion model for simulation and visualisation of industrial plant emissions. Written in Rust, compiled to WebAssembly (Wasm) using wasm-pack, runs fully in the browser.
 
-**LIVE EXAMPLE** served from GitHub repo: [https://joshuanunn.co.uk/really-simple-dispersion-wasm/example](https://joshuanunn.co.uk/really-simple-dispersion-wasm/example)
+**LIVE EXAMPLE** can be found here: [https://joshuanunn.co.uk/really-simple-dispersion-wasm/example](https://joshuanunn.co.uk/really-simple-dispersion-wasm/example)
 
 In the live example above, the properties of the industrial source and the weather conditions can be tweaked to see the effect on dispersion. Each change will plot average concentrations for a single hour. The *Simulate* button can be used to run a simulation for the specified number of hours of random weather conditions, which builds up a picture of how concentrations may look time-averaged over a longer period with varied conditions.
 
@@ -24,7 +24,9 @@ The plume is visualised by mapping concentrations onto a regular gridded areas, 
 NOTE that while this simulation can help with understanding and visualising how Gaussian plume dispersion models work, the ISC-3 model on which it is based has long-since been replaced by modern atmospheric dispersion models such as AERMOD (US) and ADMS (UK).
 
 ## Technical Details and Wasm Compilation
-Most of the core functionality and program state is encapsulated in an RSDM struct. The concentration maps are held in two internal <f64> vectors for each plot - one to hold running raw concentrations and another to build a contour map. The default "High" image quality is based on a 500 x 500 element array for the plan view (5km @ 10m pixel spacing) and a 500 x 200 element array for the height profile (5 km @ 10m horizontal spacing and 1km @ 5m vertical spacing). These are converted to png images and returned to the browser on each call.
+Most of the core functionality and program state is encapsulated in an RSDM struct. The concentration maps are held in two internal vectors for each plot - one to hold running raw concentrations and another to build a contour map. The default "High" image quality is based on a 500 x 500 element array for the plan view (5km @ 10m pixel spacing) and a 500 x 200 element array for the height profile (5 km @ 10m horizontal spacing and 1km @ 5m vertical spacing). These are converted to png images and returned to the browser on each call.
+
+Before compiling the project to Wasm, you will need to install the standard rust toolchain (rustup, rustc and cargo), and wasm-pack ([https://rustwasm.github.io/wasm-pack/installer/](https://rustwasm.github.io/wasm-pack/installer/)). To keep things simple, this project avoids the use of bundlers (like webpack) to package up the generated Wasm files (hence the need for ```--target web``` below).
 
 To compile any changes, run the following from the base project directory:
 ```sh
