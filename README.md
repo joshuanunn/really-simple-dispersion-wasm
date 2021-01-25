@@ -24,7 +24,9 @@ The plume is visualised by mapping concentrations onto a regular gridded areas, 
 NOTE that while this simulation can help with understanding and visualising how Gaussian plume dispersion models work, the ISC-3 model on which it is based has long-since been replaced by modern atmospheric dispersion models such as AERMOD (US) and ADMS (UK).
 
 ## Technical Details and Wasm Compilation
-Most of the core functionality and program state is encapsulated in an RSDM struct. The concentration maps are held in two internal <f64> vectors for each plot - one to hold running raw concentrations and another to build a contour map. The default "High" image quality is based on a 500 x 500 element array for the plan view (5km @ 10m pixel spacing) and a 500 x 200 element array for the height profile (5 km @ 10m horizontal spacing and 1km @ 5m vertical spacing). These are converted to png images and returned to the browser on each call.
+Most of the core functionality and program state is encapsulated in an RSDM struct. The concentration maps are held in two internal vectors for each plot - one to hold running raw concentrations and another to build a contour map. The default "High" image quality is based on a 500 x 500 element array for the plan view (5km @ 10m pixel spacing) and a 500 x 200 element array for the height profile (5 km @ 10m horizontal spacing and 1km @ 5m vertical spacing). These are converted to png images and returned to the browser on each call.
+
+Before compiling the project to Wasm, you will need to install the standard rust toolchain (rustup, rustc and cargo), and wasm-pack [https://rustwasm.github.io/wasm-pack/installer/](https://rustwasm.github.io/wasm-pack/installer/). To keep things simple, this repo avoids the use of bundlers (like webpack) to package up the generated Wasm files (hence the need for ```--target web``` below).
 
 To compile any changes, run the following from the base project directory:
 ```sh
