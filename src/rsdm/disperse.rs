@@ -120,12 +120,17 @@ fn sigma_zf(x: f64) -> f64 {
 }
 
 /*
-Calculate effective wind speed, using "power law" method
-Uz          [m/s]   estimated wind speed at target elevation z
+Calculate effective wind speed, using "power law" method.
+
+arguments:
+uz_ref      [m/s]   wind speed of actual measurment
 z           [m]     target elevation
-uzref       [m/s]   wind speed of actual measurment
-zref        [m]     elevation of actual measurement
-p           []      wind profile exponent factor (based on stability cat)
+z_ref       [m]     elevation of actual measurement
+pgcat       []      Pasquill-Gifford stability category
+roughness   []      "urban" or "rural"
+
+returns:
+Uz			[m/s] 	estimated wind speed at target elevation z
 */
 pub fn calc_uz(uz_ref: f64, z: f64, z_ref: f64, pgcat: u8, roughness: u8) -> f64 {
     let p: f64 = match roughness {
@@ -155,7 +160,7 @@ pub fn calc_uz(uz_ref: f64, z: f64, z_ref: f64, pgcat: u8, roughness: u8) -> f64
 /*
 Calculate the downwind (x) and crosswind (y) plume components from rectangular coordinates.
 
-inputs:
+arguments:
 e_r         [m]     receptor easting
 n_r         [m]     receptor northing
 e_s         [m]     source (stack) easting
@@ -174,9 +179,9 @@ pub fn wind_components(e_r: f64, n_r: f64, e_s: f64, n_s: f64, sin_phi: f64, cos
 }
 
 /*
-Calculate plume rise, using Briggs model.
+Calculates the plume rise (dH) to add to stack height and a downwind plume offset (Xf), using Briggs model.
 
-Calculates the plume rise (dH) to add to stack height and a downwind plume offset (Xf).
+arguments:
 us          [m/s]   wind velocity at stack tip
 vs          [m/s]   stack exit velocity
 ds          [m]     stack tip diameter
@@ -184,6 +189,7 @@ Ts          [K]     stack tip temperature
 Ta          [K]     ambient temperature
 pgcat       []      Pasquill-Gifford stability category
 
+returns:
 dH          [m]     plume rise
 Xf          [m]     plume rise offset
 */
@@ -250,10 +256,18 @@ pub fn plume_rise(us: f64, vs: f64, ds: f64, Ts: f64, Ta: f64, pgcat: u8) -> (f6
 
 /*
 Calculate concentration at distance x along plume, at perpendicular offset y and height z
+
+arguments:
 x           [km]    receptor distance downwind along plume centreline
 y           [m]     receptor perpendicular offset from plume centreline
 z           [m]     receptor height
 u_z         [m/s]   wind speed at stack exit
+Q           [g/s]   pollutant mass emission rate
+H           [m]		effective stack height (includes plume rise)
+s_y         [m]     y plume sigma
+s_z         [m]     z plume sigma
+
+returns:
 conc        [g/m3]  calculated receptor concentration
 */
 #[allow(non_snake_case)]

@@ -4,7 +4,7 @@ use crate::rsdm::preprocess::MetHour;
 use crate::rsdm::disperse::{calc_uz, plume_rise, get_sigma_y, get_sigma_z, wind_components, C};
 
 const AMBIENT_TEMP: f64 = 293.15; // Fixed ambient temperature [K] (20 C)
-const BANDS: isize = 10;
+const BANDS: i32 = 10;
 pub const TOLERANCE: f64 = 0.00000001;
 
 /// Source defines the stack (emission source) parameters
@@ -43,14 +43,15 @@ pub struct RSDM {
     // meteorological settings
     pub hours: u32,
     pub wspd: f64,
-    pub wdir: f64,
+    pub wdir: f64, // degrees
     pub roughness: u8,
     pub pgcat: u8,
 
-    // grid values (absolute and image representation)
+    // grid plan concentrations (absolute and image representation)
     r_grid: Vec<f64>,
     r_disp: Vec<u8>,
 
+    // grid profile concentrations (absolute and image representation)
     h_grid: Vec<f64>,
     h_disp: Vec<u8>,
 }
@@ -90,7 +91,7 @@ impl RSDM {
 
             hours: 20,
             wspd: 5.0,
-            wdir: 235.0, // degrees
+            wdir: 235.0,
             roughness: 0,
             pgcat: b'C',
 
@@ -256,12 +257,12 @@ impl RSDM {
                 for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
                     if Uz > 0.5 {
                         let (xx, yy) = wind_components(Xr as f64, Yr as f64, 0.0, 0.0, sin_phi, cos_phi);
-                        let xx_corr = xx - (Xf / 1000.0); // Plume rise correction
-                        let sig_y = get_sigma_y(metline.pgcat, xx_corr);
-                        let sig_z = get_sigma_z(metline.pgcat, xx_corr);
+                        let xx = xx - (Xf / 1000.0); // Plume rise correction
+                        let sig_y = get_sigma_y(metline.pgcat, xx);
+                        let sig_z = get_sigma_z(metline.pgcat, xx);
                         
                         let i = self.cr_to_linear(x, y);
-                        let conc = C(xx_corr, yy, 0.0, Uz, Q, H, sig_y, sig_z) / hours as f64;
+                        let conc = C(xx, yy, 0.0, Uz, Q, H, sig_y, sig_z) / hours as f64;
                         self.r_grid[i] += conc;
                     }
                 }
@@ -271,12 +272,12 @@ impl RSDM {
             for (z,Zr) in (self.z_min..self.z_max).step_by(self.z_spacing).enumerate() {
                 for (x,Xr) in (self.x_min..self.x_max).step_by(self.x_spacing).enumerate() {
                     if Uz > 0.5 {
-                        let xx_corr = (Xr as f64 - Xf) / 1000.0; // Plume rise correction
-                        let sig_y = get_sigma_y(metline.pgcat, xx_corr);
-                        let sig_z = get_sigma_z(metline.pgcat, xx_corr);
+                        let xx = (Xr as f64 - Xf) / 1000.0; // Plume rise correction
+                        let sig_y = get_sigma_y(metline.pgcat, xx);
+                        let sig_z = get_sigma_z(metline.pgcat, xx);
                         
                         let i = self.ch_to_linear(x, z);
-                        let conc = C(xx_corr, 0.0, Zr as f64, Uz, Q, H, sig_y, sig_z) / hours as f64;
+                        let conc = C(xx, 0.0, Zr as f64, Uz, Q, H, sig_y, sig_z) / hours as f64;
                         self.h_grid[i] += conc;
                     }
                 }
@@ -287,7 +288,7 @@ impl RSDM {
     pub fn update_png(&mut self) {
         // Calculate min based on max - use log to band
         let grid_max = self.r_grid_max();
-        let min_norm = grid_max.log10().trunc() as isize - BANDS;
+        let min_norm = grid_max.log10().trunc() as i32 - BANDS;
         
         // Normalise 2d grid into bands by taking log
         for y in 0..self.y_points {
@@ -295,7 +296,7 @@ impl RSDM {
                 
                 let i = self.cr_to_linear(x, y);
                 if self.r_grid[i] > grid_max / 1e10 {
-                    let conc_norm = self.r_grid[i].log10().trunc() as isize - min_norm;
+                    let conc_norm = self.r_grid[i].log10().trunc() as i32 - min_norm;
                     self.r_disp[i] = conc_norm as u8;
                 } else {
                     self.r_disp[i] = 0;
@@ -309,7 +310,7 @@ impl RSDM {
                 
                 let i = self.ch_to_linear(x, z);
                 if self.h_grid[i] > grid_max / 1e10 {
-                    let conc_norm = self.h_grid[i].log10().trunc() as isize - min_norm;
+                    let conc_norm = self.h_grid[i].log10().trunc() as i32 - min_norm;
                     self.h_disp[i] = conc_norm as u8;
                 } else {
                     self.h_disp[i] = 0;
