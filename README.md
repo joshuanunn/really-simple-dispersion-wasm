@@ -3,7 +3,7 @@
 ## Introduction
 An interactive atmospheric dispersion model for simulation and visualisation of industrial plant emissions. Written in Rust, compiled to WebAssembly (Wasm) using wasm-pack, runs fully in the browser.
 
-**LIVE EXAMPLE** served from GitHub repo: [https://joshuanunn.co.uk/really-simple-dispersion-wasm/example](https://joshuanunn.co.uk/really-simple-dispersion-wasm/example)
+**LIVE EXAMPLE** can be found here: [https://joshuanunn.co.uk/really-simple-dispersion-wasm/example](https://joshuanunn.co.uk/really-simple-dispersion-wasm/example)
 
 In the live example above, the properties of the industrial source and the weather conditions can be tweaked to see the effect on dispersion. Each change will plot average concentrations for a single hour. The *Simulate* button can be used to run a simulation for the specified number of hours of random weather conditions, which builds up a picture of how concentrations may look time-averaged over a longer period with varied conditions.
 
